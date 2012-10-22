@@ -193,12 +193,15 @@
                         var orientation = $(img).exif('Orientation')[0];
                                 
                         // CW or CCW ? replace width and height
-                        var size = (orientation >= 5 || orientation <= 8)
+                        var size = (orientation >= 5 && orientation <= 8)
                         ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
                         : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
                                 
                         var iw = img.width, ih = img.height;
                         var width = size.width, height = size.height;
+                                
+                                
+                        console.log(iw, ih, size.width, size.height, orientation);
                                 
                         var canvas = document.createElement("canvas");
                         var ctx = canvas.getContext("2d");
@@ -236,8 +239,16 @@
                         }
                         ctx.restore();
                         tmpCanvas = tmpCtx = null;
-                        var data = canvas.toDataURL("image/jpeg", ($this.options.quality * .01));
-                                
+                        
+                        // if rotated width and height data replacing issue 
+                        var newcanvas = document.createElement('canvas');
+                        newcanvas.width = width;
+                        newcanvas.height = height;
+                        newctx= newcanvas.getContext('2d');
+                        newctx.drawImage(canvas, 0, 0, width, height);
+                        
+                        var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
+                        
                         // CALLBACK
                         $this.options.callback(data, width, height);
                                 

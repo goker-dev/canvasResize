@@ -1,6 +1,5 @@
 <?php
 
-
 /*
   // LOG
   $log = '=== ' . @date('Y-m-d H:i:s') . ' ===============================' . "\n"
@@ -44,7 +43,7 @@ if (in_array($_FILES['photo']['type'], $types)) {
     // Uploaded file source
     $source = file_get_contents($_FILES["photo"]["tmp_name"]);
     // Image resize
-    imageresize($source, $filename, 300);
+    imageresize($source, $filename);
 } else
 // If the file is not an image
     $r->error = "Error: this is not an image file";
@@ -68,6 +67,7 @@ function imageresize($source, $destination, $width = 0, $height = 0, $crop = fal
         // Get dimensions
         $w = imagesx($image);
         $h = imagesy($image);
+        //die(json_encode(array('width' => $w, 'height' => $h)));
         if (($width && $w > $width) || ($height && $h > $height)) {
             $ratio = $w / $h;
             if (($ratio >= 1 || $height == 0) && $width && !$crop) {
@@ -90,7 +90,7 @@ function imageresize($source, $destination, $width = 0, $height = 0, $crop = fal
         error_log('height: ' . $new_height . ' - width: ' . $new_width);
         $new = imagecreatetruecolor(floor($new_width), floor($new_height));
         $x = 0;
-        if($new_width > $new_height){
+        if ($new_width > $new_height) {
             //$new_height = $new_height *8;
         } else {
             //$x = -$new_width * 7;

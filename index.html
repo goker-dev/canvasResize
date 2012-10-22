@@ -114,13 +114,16 @@
                                 } 
                             }).done(function (response) {
                                
-                                // Complete
-                                $('p span').html('done');
-                                $('b').html(response.filename);
-                                $('<img>').attr({
-                                    'src': response.filename
-                                })
-                                .appendTo($('div'));
+                                //console.log(response);
+                                if(response.filename){
+                                    // Complete
+                                    $('p span').html('done');
+                                    $('b').html(response.filename);
+                                    $('<img>').attr({
+                                        'src': response.filename
+                                    })
+                                    .appendTo($('div'));
+                                }
                                 
                             });
                            

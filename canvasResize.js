@@ -170,19 +170,42 @@
         },
         callback: function(d) {
             return d;
+        },
+        extend: function() {
+            var target = arguments[0] || {}, a = 1, al = arguments.length, deep = false;
+            if ( target.constructor == Boolean ) {
+                deep = target;
+                target = arguments[1] || {};
+            }
+            if ( al == 1 ) {
+                target = this;
+                a = 0;
+            }
+            var prop;
+            for ( ; a < al; a++ )
+                if ( (prop = arguments[a]) != null )
+                    for ( var i in prop ) {
+                        if ( target == prop[i] )
+                            continue;
+                        if ( deep && typeof prop[i] == 'object' && target[i] )
+                            methods.extend( target[i], prop[i] );
+                        else if ( prop[i] != undefined )
+                            target[i] = prop[i];
+                    }
+            return target;
         }
     },
             defaults = {
-    width    : 300,
-            height   : 0,
-            crop     : false,
-            quality  : 80,
-            'callback' : methods.callback
+              width    : 300,
+              height   : 0,
+              crop     : false,
+              quality  : 80,
+              'callback' : methods.callback
     };
     function Plugin(file, options) {
         this.file = file;
         // EXTEND
-        this.options = options;//$.extend( {}, defaults, options) ;
+        this.options = methods.extend( {}, defaults, options) ;
         this._defaults = defaults;
         this._name = pluginName;
         this.init();

@@ -1,7 +1,7 @@
 /*
  * jQuery canvasResize plugin
  * 
- * Version: 1.0.0 
+ * Version: 1.0.1 
  * Date (d/m/y): 02/09/12
  * Original author: @gokercebeci 
  * Licensed under the MIT license
@@ -209,7 +209,6 @@
                         var iw = img.width, ih = img.height;
                         var width = size.width, height = size.height;
                                 
-                                
                         //console.log(iw, ih, size.width, size.height, orientation);
                                 
                         var canvas = document.createElement("canvas");
@@ -219,10 +218,8 @@
                                 
                         // over image size
                         if(methods.detectSubsampling(img)){
-                            console.log('OVER',iw, ih);
                             iw /= 2;
                             ih /= 2;
-                            console.log('OVER2',iw, ih);
                         }
                         var d = 1024; // size of tiling canvas
                         var tmpCanvas = document.createElement('canvas');

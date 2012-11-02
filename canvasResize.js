@@ -1,44 +1,45 @@
 /*
- * jQuery canvasResize plugin
+ * 
+ * canvasResize
  * 
  * Version: 1.0.0 
- * Date (d/m/y): 02/09/12
+ * Date (d/m/y): 02/10/12
  * Original author: @gokercebeci 
  * Licensed under the MIT license
- * - This plugin working with jquery.exif.js 
+ * - This plugin working with binaryajax.js and exif.js 
  *   (It's under the MPL License http://www.nihilogic.dk/licenses/mpl-license.txt)
- * Demo: http://ios6-image-resize.gokercebeci.com/
+ * Demo: http://canvasResize.gokercebeci.com/
  * 
  * - I fixed iOS6 Safari's image file rendering issue for large size image (over mega-pixel)
  *   using few functions from https://github.com/stomita/ios-imagefile-megapixel
  *   (detectSubsampling, )
- *   And fixed orientation issue by edited http://blog.nihilogic.dk/2008/05/jquery-exif-data-plugin.html
+ *   And fixed orientation issue by using https://github.com/jseidelin/exif-js
  *   Thanks, Shinichi Tomita and Jacob Seidelin
  */
 
-(function ( $ ) {
+(function($) {
     var pluginName = 'canvasResize',
-    methods = {
-        newsize: function(w, h, W, H, C){
+            methods = {
+        newsize: function(w, h, W, H, C) {
             if ((W && w > W) || (H && h > H)) {
                 var r = w / h;
                 if ((r >= 1 || H == 0) && W && !C) {
-                    w  = W;
+                    w = W;
                     h = (W / r) >> 0;
                 } else if (C && r <= (W / H)) {
-                    w  = W;
+                    w = W;
                     h = (W / r) >> 0;
                 } else {
-                    w  = (H * r) >> 0;
+                    w = (H * r) >> 0;
                     h = H;
                 }
             }
             return {
-                'width':w, 
-                'height':h
+                'width': w,
+                'height': h
             };
         },
-        dataURLtoBlob: function (data){
+        dataURLtoBlob: function(data) {
             var mimeString = data.split(',')[0].split(':')[1].split(';')[0];
             var byteString = atob(data.split(',')[1]);
             var ab = new ArrayBuffer(byteString.length);
@@ -47,15 +48,15 @@
                 ia[i] = byteString.charCodeAt(i);
             }
             var bb = (window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder);
-            if(bb){
-            //    console.log('BlobBuilder');        
+            if (bb) {
+                //    console.log('BlobBuilder');        
                 bb = new (window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder)();
                 bb.append(ab);
                 return bb.getBlob(mimeString);
             } else {
-            //    console.log('Blob');  
-                bb = new Blob([ab],{
-                    'type' : (mimeString)
+                //    console.log('Blob');  
+                bb = new Blob([ab], {
+                    'type': (mimeString)
                 });
                 return bb;
             }
@@ -64,7 +65,7 @@
          * Detect subsampling in loaded image.
          * In iOS, larger images than 2M pixels may be subsampled in rendering.
          */
-        detectSubsampling:   function (img) {
+        detectSubsampling: function(img) {
             var iw = img.width, ih = img.height;
             if (iw * ih > 1024 * 1024) { // subsampling may happen over megapixel image
                 var canvas = document.createElement('canvas');
@@ -83,8 +84,7 @@
          * Transform canvas coordination according to specified frame size and orientation
          * Orientation value is from EXIF tag
          */
-        transformCoordinate:  function (canvas, width, height, orientation) {
-            //console.log(width, height);
+        transformCoordinate: function(canvas, width, height, orientation) {
             switch (orientation) {
                 case 5:
                 case 6:
@@ -146,7 +146,7 @@
          * Detecting vertical squash in loaded image.
          * Fixes a bug which squash image vertically while drawing into canvas for some images.
          */
-        detectVerticalSquash:function (img, iw, ih) {
+        detectVerticalSquash: function(img, iw, ih) {
             var canvas = document.createElement('canvas');
             canvas.width = 1;
             canvas.height = ih
@@ -168,20 +168,21 @@
             }
             return py / ih;
         },
-        callback: function(d){
+        callback: function(d) {
             return d;
         }
     },
-    defaults = {
-        width    : 300,
-        height   : 0,
-        crop     : false,
-        quality  : 80,
-        'callback' : methods.callback
+            defaults = {
+    width    : 300,
+            height   : 0,
+            crop     : false,
+            quality  : 80,
+            'callback' : methods.callback
     };
-    function Plugin( file, options ) {
+    function Plugin(file, options) {
         this.file = file;
-        this.options = $.extend( {}, defaults, options) ;
+        // EXTEND
+        this.options = options;//$.extend( {}, defaults, options) ;
         this._defaults = defaults;
         this._name = pluginName;
         this.init();
@@ -189,92 +190,94 @@
     Plugin.prototype = {
         init: function() {
             //this.options.init(this);
-            var $this =  this;
+            var $this = this;
             var file = this.file;
-            
+
             var reader = new FileReader();
             reader.onloadend = function(e) {
-                var dataURL = e.target.result;  
+
+                var dataURL = e.target.result;
+                var byteString = atob(dataURL.split(',')[1]);
+                var binary = new BinaryFile(byteString, 0, byteString.length);
+                var exif = EXIF.readFromBinaryFile(binary);
+
                 var img = new Image();
-                img.onload = function(e){
-                    // Read Orientation Data in EXIF
-                    $(img).exifLoadFromDataURL( function(){
-                        var orientation = $(img).exif('Orientation')[0];
-                                
-                        // CW or CCW ? replace width and height
-                        var size = (orientation >= 5 && orientation <= 8)
-                        ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
-                        : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
-                                
-                        var iw = img.width, ih = img.height;
-                        var width = size.width, height = size.height;
-                                
-                                
-                        //console.log(iw, ih, size.width, size.height, orientation);
-                                
-                        var canvas = document.createElement("canvas");
-                        var ctx = canvas.getContext("2d");
-                        ctx.save();
-                        methods.transformCoordinate(canvas, width, height, orientation);
-                                
-                        // over image size
-                        if(methods.detectSubsampling(img)){
-                            console.log('OVER',iw, ih);
-                            iw /= 2;
-                            ih /= 2;
-                            console.log('OVER2',iw, ih);
+                img.onload = function(e) {
+
+                    var orientation = exif['Orientation'];
+
+                    // CW or CCW ? replace width and height
+                    var size = (orientation >= 5 && orientation <= 8)
+                            ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
+                            : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
+
+                    var iw = img.width, ih = img.height;
+                    var width = size.width, height = size.height;
+
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    ctx.save();
+                    methods.transformCoordinate(canvas, width, height, orientation);
+
+                    // over image size
+                    if (methods.detectSubsampling(img)) {
+                        iw /= 2;
+                        ih /= 2;
+                    }
+                    var d = 1024; // size of tiling canvas
+                    var tmpCanvas = document.createElement('canvas');
+                    tmpCanvas.width = tmpCanvas.height = d;
+                    var tmpCtx = tmpCanvas.getContext('2d');
+                    var vertSquashRatio = methods.detectVerticalSquash(img, iw, ih);
+                    var sy = 0;
+                    while (sy < ih) {
+                        var sh = sy + d > ih ? ih - sy : d;
+                        var sx = 0;
+                        while (sx < iw) {
+                            var sw = sx + d > iw ? iw - sx : d;
+                            tmpCtx.clearRect(0, 0, d, d);
+                            tmpCtx.drawImage(img, -sx, -sy);
+                            var dx = Math.floor(sx * width / iw);
+                            var dw = Math.ceil(sw * width / iw);
+                            var dy = Math.floor(sy * height / ih / vertSquashRatio);
+                            var dh = Math.ceil(sh * height / ih / vertSquashRatio);
+                            ctx.drawImage(tmpCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
+                            sx += d;
                         }
-                        var d = 1024; // size of tiling canvas
-                        var tmpCanvas = document.createElement('canvas');
-                        tmpCanvas.width = tmpCanvas.height = d;
-                        var tmpCtx = tmpCanvas.getContext('2d');
-                        var vertSquashRatio = methods.detectVerticalSquash(img, iw, ih);
-                        var sy = 0;
-                        while (sy < ih) {
-                            var sh = sy + d > ih ? ih - sy : d;
-                            var sx = 0;
-                            while (sx < iw) {
-                                var sw = sx + d > iw ? iw - sx : d;
-                                tmpCtx.clearRect(0, 0, d, d);
-                                tmpCtx.drawImage(img, -sx, -sy);
-                                var dx = Math.floor(sx * width / iw);
-                                var dw = Math.ceil(sw * width / iw);
-                                var dy = Math.floor(sy * height / ih / vertSquashRatio);
-                                var dh = Math.ceil(sh * height / ih / vertSquashRatio);
-                                ctx.drawImage(tmpCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
-                                sx += d;
-                            }
-                            sy += d;
-                        }
-                        ctx.restore();
-                        tmpCanvas = tmpCtx = null;
-                        
-                        // if rotated width and height data replacing issue 
-                        var newcanvas = document.createElement('canvas');
-                        newcanvas.width = width;
-                        newcanvas.height = height;
-                        newctx= newcanvas.getContext('2d');
-                        newctx.drawImage(canvas, 0, 0, width, height);
-                        
-                        var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
-                        
-                        // CALLBACK
-                        $this.options.callback(data, width, height);
-                                
-                    });
+                        sy += d;
+                    }
+                    ctx.restore();
+                    tmpCanvas = tmpCtx = null;
+
+                    // if rotated width and height data replacing issue 
+                    var newcanvas = document.createElement('canvas');
+                    newcanvas.width = width;
+                    newcanvas.height = height;
+                    newctx = newcanvas.getContext('2d');
+                    newctx.drawImage(canvas, 0, 0, width, height);
+
+                    var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
+
+                    // CALLBACK
+                    $this.options.callback(data, width, height);
+
+                    // });
                 };
                 img.src = dataURL;
-            // =====================================================
+                // =====================================================
+
+
             }
             reader.readAsDataURL(file);
-            
+            //reader.readAsBinaryString(file);
+
         }
     };
-    $[pluginName] = function ( file, options ) {
-        if(typeof file == 'string')
+    $[pluginName] = function(file, options) {
+        if (typeof file == 'string')
             return methods[file](options);
         else
-            new Plugin( file, options );
+            new Plugin(file, options);
     }
 
-})( jQuery );
+})(window);

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <script src="jquery-1.7.2.min.js"></script>
+        <script src="jquery.exif.js"></script>
+        <script src="jquery.canvasResize.js"></script>
+        <title>jQuery canvasResize Plugin</title>
+        <style>
+            body { margin: 5px 10px; font: 11px sans-serif;}
+            div p { display: block; width: 300px; }
+            div p span { display: block; padding: 2px 0; width: 0; background: #193; text-align: center; }
+            b, img { display: block; }
+            img { margin: 10px 0; width: 300px; }
+            input { visibility: hidden; height: 0; }
+            u { display: block; padding: 15px; text-align: center; background: #ddd; border-radius: 6px; }
+            a.fork { display:block; margin-top: 30px; padding: 8px 15px; text-align: center; background: #eee; border-radius: 6px; }
+        </style>
+    </head>
+    <body>
+        <h1>jQuery canvasResize Plugin</h1>
+        <div>
+            <input name="photo" type="file"/>
+            <u>Choose file</u>
+            <p><span></span></p>
+            <i></i>
+        </div>
+        <a class="fork" href="https://github.com/gokercebeci/canvasResize">fork it</a>
+        <p>
+            The plugin for client side image resizing.
+            It's compatible with iOS6 and Android 2.3+ <br/>
+            It is under the MIT License and It requires "jquery.exif.js" to work
+            which is also under the MPL License [http://www.nihilogic.dk/licenses/mpl-license.txt]<br/><br/>
+            I fixed iOS6 Safari's image file rendering issue for large size image (over mega-pixel)
+            using few functions from 
+            <a href="https://github.com/stomita/ios-imagefile-megapixel">ios-imagefile-megapixel</a><br/>
+            And fixed orientation issue by using edited 
+            <a href="http://blog.nihilogic.dk/2008/05/jquery-exif-data-plugin.html">jQuery EXIF data plugin</a>
+        </p>
+        <script>
+            
+            $().ready(function(){
+                
+                $('u').click(function(){
+                    $('input[name=photo]').trigger('click');
+                });
+                
+                $('input[name=photo]').change(function(e){
+                    var file = e.target.files[0];
+                    
+                    // RESET
+                    $('p span').css('width',0 + "%").html('');
+                    $('img, canvas').remove();
+                    $('i').html(JSON.stringify(e.target.files[0]).replace(/,/g,", <br/>"));
+                    
+                    // CANVAS RESIZING
+                    $.canvasResize(file, {
+                        width   : 300,
+                        height  : 0,
+                        crop    : false,
+                        quality : 80,
+                        callback: function(data, width, height){
+                            
+                            // SHOW AS AN IMAGE
+                            // =================================================
+                            
+                            $('<img>').load(function(){ 
+                                
+                                $(this).css({
+                                    'margin' : '10px auto',
+                                    'width'  : width,
+                                    'height' : height
+                                }).appendTo('div');
+                                
+                            }).attr('src', data);
+                            
+                            // /SHOW AS AN IMAGE
+                            // =================================================
+                            
+                            // IMAGE UPLOADING
+                            // =================================================
+                                
+                            // Create a new formdata
+                            var fd = new FormData();
+                            // Add file data
+                            var f = $.canvasResize('dataURLtoBlob',data);
+                            f.name = file.name;
+                            fd.append($('input').attr('name'), f);
+                            
+                            $.ajax({
+                                url        : 'uploader.php',
+                                type       : 'POST',
+                                data       : fd,
+                                dataType   : 'json',
+                                contentType: false,
+                                processData: false,
+                                beforeSend : function (xhr) {
+                                    xhr.setRequestHeader("pragma", "no-cache");
+                                },
+                                xhr        : function(){
+                                    var xhr = new window.XMLHttpRequest();
+                                    //Upload progress
+                                    xhr.upload.addEventListener("progress", function(e){
+                                        if (e.lengthComputable) {
+                                            var loaded = Math.ceil((e.loaded / e.total) * 100);
+                                            $('p span').css({
+                                                'width':loaded + "%"
+                                            }).html(loaded + "%");
+                                        }
+                                    }, false);
+                                    return xhr;
+                                } 
+                            }).done(function (response) {
+                               
+                                //console.log(response);
+                                if(response.filename){
+                                    // Complete
+                                    $('p span').html('done');
+                                    $('b').html(response.filename);
+                                    $('<img>').attr({
+                                        'src': response.filename
+                                    })
+                                    .appendTo($('div'));
+                                }
+                                
+                            });
+                           
+                                
+                            // /IMAGE UPLOADING
+                            // =================================================               
+                        }
+                    });                    
+                    
+                });
+            });
+        </script>
+    </body>
+</html>

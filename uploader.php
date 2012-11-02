@@ -44,9 +44,11 @@ if (in_array($_FILES['photo']['type'], $types)) {
     $source = file_get_contents($_FILES["photo"]["tmp_name"]);
     // Image resize
     imageresize($source, $filename);
-} else
-// If the file is not an image
+} else {
+    // If the file is not an image
     $r->error = "Error: this is not an image file";
+    return false;
+}
 
 // File path
 $path = str_replace('uploader.php', '', $_SERVER['SCRIPT_NAME']);

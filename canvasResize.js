@@ -166,7 +166,12 @@
                 }
                 py = (ey + sy) >> 1;
             }
-            return py / ih;
+            var ratio = py / ih;
+            if(ratio === 0){
+                ratio = 1;
+            }
+            
+            return ratio;
         },
         callback: function(d) {
             return d;

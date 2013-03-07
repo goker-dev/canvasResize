@@ -81,6 +81,144 @@
             }
         },
         /**
+         * Update the orientation according to the specified rotation angle
+         */
+        rotate:  function (orientation, angle) {
+            switch (orientation) {
+                case 1:
+                    // nothing
+                    switch (angle) {
+                        case 90:
+                            orientation = 6;
+                            break;
+                        case 180:
+                            orientation = 3;
+                            break;
+                        case 270:
+                            orientation = 8;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 2:
+                    // horizontal flip
+                    switch (angle) {
+                        case 90:
+                            orientation = 7;
+                            break;
+                        case 180:
+                            orientation = 4;
+                            break;
+                        case 270:
+                            orientation = 5;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 3:
+                    // 180 rotate left
+                    switch (angle) {
+                        case 90:
+                            orientation = 8;
+                            break;
+                        case 180:
+                            orientation = 1;
+                            break;
+                        case 270:
+                            orientation = 6;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 4:
+                    // vertical flip
+                    switch (angle) {
+                        case 90:
+                            orientation = 5;
+                            break;
+                        case 180:
+                            orientation = 2;
+                            break;
+                        case 270:
+                            orientation = 7;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 5:
+                    // vertical flip + 90 rotate right
+                    switch (angle) {
+                        case 90:
+                            orientation = 2;
+                            break;
+                        case 180:
+                            orientation = 7;
+                            break;
+                        case 270:
+                            orientation = 4;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 6:
+                    // 90 rotate right
+                    switch (angle) {
+                        case 90:
+                            orientation = 3;
+                            break;
+                        case 180:
+                            orientation = 8;
+                            break;
+                        case 270:
+                            orientation = 1;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 7:
+                    // horizontal flip + 90 rotate right
+                    switch (angle) {
+                        case 90:
+                            orientation = 4;
+                            break;
+                        case 180:
+                            orientation = 5;
+                            break;
+                        case 270:
+                            orientation = 2;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 8:
+                    // 90 rotate left
+                    switch (angle) {
+                        case 90:
+                            orientation = 1;
+                            break;
+                        case 180:
+                            orientation = 6;
+                            break;
+                        case 270:
+                            orientation = 3;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return orientation;
+        },
+        /**
          * Transform canvas coordination according to specified frame size and orientation
          * Orientation value is from EXIF tag
          */
@@ -200,6 +338,7 @@
               height   : 0,
               crop     : false,
               quality  : 80,
+              rotate   : 0,
               'callback' : methods.callback
     };
     function Plugin(file, options) {
@@ -227,7 +366,8 @@
                 var img = new Image();
                 img.onload = function(e) {
 
-                    var orientation = exif['Orientation'];
+                    var orientation = exif['Orientation'] || 1;
+                    orientation = methods.rotate(orientation, $this.options.rotate);
 
                     // CW or CCW ? replace width and height
                     var size = (orientation >= 5 && orientation <= 8)

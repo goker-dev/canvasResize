@@ -1,8 +1,9 @@
 /*
  * jQuery canvasResize plugin
  * 
- * Version: 1.0.1 
- * Date (d/m/y): 02/09/12
+ * Version: 1.1.1 
+ * Date (d/m/y): 02/10/12
+ * Update (d/m/y): 09/03/13
  * Original author: @gokercebeci 
  * Licensed under the MIT license
  * - This plugin working with jquery.exif.js 
@@ -16,29 +17,29 @@
  *   Thanks, Shinichi Tomita and Jacob Seidelin
  */
 
-(function ( $ ) {
+(function($) {
     var pluginName = 'canvasResize',
-    methods = {
-        newsize: function(w, h, W, H, C){
+            methods = {
+        newsize: function(w, h, W, H, C) {
             if ((W && w > W) || (H && h > H)) {
                 var r = w / h;
-                if ((r >= 1 || H == 0) && W && !C) {
-                    w  = W;
+                if ((r >= 1 || H === 0) && W && !C) {
+                    w = W;
                     h = (W / r) >> 0;
                 } else if (C && r <= (W / H)) {
-                    w  = W;
+                    w = W;
                     h = (W / r) >> 0;
                 } else {
-                    w  = (H * r) >> 0;
+                    w = (H * r) >> 0;
                     h = H;
                 }
             }
             return {
-                'width':w, 
-                'height':h
+                'width': w,
+                'height': h
             };
         },
-        dataURLtoBlob: function (data){
+        dataURLtoBlob: function(data) {
             var mimeString = data.split(',')[0].split(':')[1].split(';')[0];
             var byteString = atob(data.split(',')[1]);
             var ab = new ArrayBuffer(byteString.length);
@@ -47,15 +48,15 @@
                 ia[i] = byteString.charCodeAt(i);
             }
             var bb = (window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder);
-            if(bb){
-            //    console.log('BlobBuilder');        
+            if (bb) {
+                //    console.log('BlobBuilder');        
                 bb = new (window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder)();
                 bb.append(ab);
                 return bb.getBlob(mimeString);
             } else {
-            //    console.log('Blob');  
-                bb = new Blob([ab],{
-                    'type' : (mimeString)
+                //    console.log('Blob');  
+                bb = new Blob([ab], {
+                    'type': (mimeString)
                 });
                 return bb;
             }
@@ -64,9 +65,9 @@
          * Detect subsampling in loaded image.
          * In iOS, larger images than 2M pixels may be subsampled in rendering.
          */
-        detectSubsampling:   function (img) {
+        detectSubsampling: function(img) {
             var iw = img.width, ih = img.height;
-            if (iw * ih > 1024 * 1024) { // subsampling may happen over megapixel image
+            if (iw * ih > 1048576) { // subsampling may happen over megapixel image
                 var canvas = document.createElement('canvas');
                 canvas.width = canvas.height = 1;
                 var ctx = canvas.getContext('2d');
@@ -80,10 +81,34 @@
             }
         },
         /**
+         * Update the orientation according to the specified rotation angle
+         */
+        rotate: function(orientation, angle) {
+            var o = {
+                // nothing
+                1: {90: 6, 180: 3, 270: 8},
+                // horizontal flip
+                2: {90: 7, 180: 4, 270: 5},
+                // 180 rotate left
+                3: {90: 8, 180: 1, 270: 6},
+                // vertical flip
+                4: {90: 5, 180: 2, 270: 7},
+                // vertical flip + 90 rotate right
+                5: {90: 2, 180: 7, 270: 4},
+                // 90 rotate right
+                6: {90: 3, 180: 8, 270: 1},
+                // horizontal flip + 90 rotate right
+                7: {90: 4, 180: 5, 270: 2},
+                // 90 rotate left
+                8: {90: 1, 180: 6, 270: 3}
+            };
+            return o[orientation][angle] ? o[orientation][angle] : orientation;
+        },
+        /**
          * Transform canvas coordination according to specified frame size and orientation
          * Orientation value is from EXIF tag
          */
-        transformCoordinate:  function (canvas, width, height, orientation) {
+        transformCoordinate: function(canvas, width, height, orientation) {
             //console.log(width, height);
             switch (orientation) {
                 case 5:
@@ -146,10 +171,10 @@
          * Detecting vertical squash in loaded image.
          * Fixes a bug which squash image vertically while drawing into canvas for some images.
          */
-        detectVerticalSquash:function (img, iw, ih) {
+        detectVerticalSquash: function(img, iw, ih) {
             var canvas = document.createElement('canvas');
             canvas.width = 1;
-            canvas.height = ih
+            canvas.height = ih;
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             var data = ctx.getImageData(0, 0, 1, ih).data;
@@ -166,22 +191,23 @@
                 }
                 py = (ey + sy) >> 1;
             }
-            return py / ih;
+            var ratio = py / ih;
+            return ratio === 0 ? 1 : ratio;
         },
-        callback: function(d){
+        callback: function(d) {
             return d;
         }
     },
     defaults = {
-        width    : 300,
-        height   : 0,
-        crop     : false,
-        quality  : 80,
-        'callback' : methods.callback
+    width    : 300,
+            height   : 0,
+            crop     : false,
+            quality  : 80,
+            'callback' : methods.callback
     };
-    function Plugin( file, options ) {
+    function Plugin(file, options) {
         this.file = file;
-        this.options = $.extend( {}, defaults, options) ;
+        this.options = $.extend({}, defaults, options);
         this._defaults = defaults;
         this._name = pluginName;
         this.init();
@@ -189,35 +215,36 @@
     Plugin.prototype = {
         init: function() {
             //this.options.init(this);
-            var $this =  this;
+            var $this = this;
             var file = this.file;
-            
+
             var reader = new FileReader();
             reader.onloadend = function(e) {
-                var dataURL = e.target.result;  
+                var dataURL = e.target.result;
                 var img = new Image();
-                img.onload = function(e){
+                img.onload = function(e) {
                     // Read Orientation Data in EXIF
-                    $(img).exifLoadFromDataURL( function(){
-                        var orientation = $(img).exif('Orientation')[0];
-                                
+                    $(img).exifLoadFromDataURL(function() {
+                        var orientation = $(img).exif('Orientation')[0] || 1;
+                        orientation = methods.rotate(orientation, $this.options.rotate);
+
                         // CW or CCW ? replace width and height
                         var size = (orientation >= 5 && orientation <= 8)
-                        ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
-                        : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
-                                
+                                ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
+                                : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
+
                         var iw = img.width, ih = img.height;
                         var width = size.width, height = size.height;
-                                
+
                         //console.log(iw, ih, size.width, size.height, orientation);
-                                
+
                         var canvas = document.createElement("canvas");
                         var ctx = canvas.getContext("2d");
                         ctx.save();
                         methods.transformCoordinate(canvas, width, height, orientation);
-                                
+
                         // over image size
-                        if(methods.detectSubsampling(img)){
+                        if (methods.detectSubsampling(img)) {
                             iw /= 2;
                             ih /= 2;
                         }
@@ -245,33 +272,33 @@
                         }
                         ctx.restore();
                         tmpCanvas = tmpCtx = null;
-                        
+
                         // if rotated width and height data replacing issue 
                         var newcanvas = document.createElement('canvas');
                         newcanvas.width = width;
                         newcanvas.height = height;
-                        newctx= newcanvas.getContext('2d');
+                        newctx = newcanvas.getContext('2d');
                         newctx.drawImage(canvas, 0, 0, width, height);
-                        
+                        // TO DO: image/png detecting issue
                         var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
-                        
+
                         // CALLBACK
                         $this.options.callback(data, width, height);
-                                
+
                     });
                 };
                 img.src = dataURL;
-            // =====================================================
-            }
+                // =====================================================
+            };
             reader.readAsDataURL(file);
-            
+
         }
     };
-    $[pluginName] = function ( file, options ) {
-        if(typeof file == 'string')
+    $[pluginName] = function(file, options) {
+        if (typeof file === 'string')
             return methods[file](options);
         else
-            new Plugin( file, options );
-    }
+            new Plugin(file, options);
+    };
 
-})( jQuery );
+})(jQuery);

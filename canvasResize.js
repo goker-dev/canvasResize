@@ -2,8 +2,9 @@
  * 
  * canvasResize
  * 
- * Version: 1.0.0 
+ * Version: 1.1.1 
  * Date (d/m/y): 02/10/12
+ * Update (d/m/y): 09/03/13
  * Original author: @gokercebeci 
  * Licensed under the MIT license
  * - This plugin working with binaryajax.js and exif.js 
@@ -23,7 +24,7 @@
         newsize: function(w, h, W, H, C) {
             if ((W && w > W) || (H && h > H)) {
                 var r = w / h;
-                if ((r >= 1 || H == 0) && W && !C) {
+                if ((r >= 1 || H === 0) && W && !C) {
                     w = W;
                     h = (W / r) >> 0;
                 } else if (C && r <= (W / H)) {
@@ -67,7 +68,7 @@
          */
         detectSubsampling: function(img) {
             var iw = img.width, ih = img.height;
-            if (iw * ih > 1024 * 1024) { // subsampling may happen over megapixel image
+            if (iw * ih > 1048576) { // subsampling may happen over megapixel image
                 var canvas = document.createElement('canvas');
                 canvas.width = canvas.height = 1;
                 var ctx = canvas.getContext('2d');
@@ -79,6 +80,30 @@
             } else {
                 return false;
             }
+        },
+        /**
+         * Update the orientation according to the specified rotation angle
+         */
+        rotate: function(orientation, angle) {
+            var o = {
+                // nothing
+                1: {90: 6, 180: 3, 270: 8},
+                // horizontal flip
+                2: {90: 7, 180: 4, 270: 5},
+                // 180 rotate left
+                3: {90: 8, 180: 1, 270: 6},
+                // vertical flip
+                4: {90: 5, 180: 2, 270: 7},
+                // vertical flip + 90 rotate right
+                5: {90: 2, 180: 7, 270: 4},
+                // 90 rotate right
+                6: {90: 3, 180: 8, 270: 1},
+                // horizontal flip + 90 rotate right
+                7: {90: 4, 180: 5, 270: 2},
+                // 90 rotate left
+                8: {90: 1, 180: 6, 270: 3}
+            };
+            return o[orientation][angle] ? o[orientation][angle] : orientation;
         },
         /**
          * Transform canvas coordination according to specified frame size and orientation
@@ -149,7 +174,7 @@
         detectVerticalSquash: function(img, iw, ih) {
             var canvas = document.createElement('canvas');
             canvas.width = 1;
-            canvas.height = ih
+            canvas.height = ih;
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             var data = ctx.getImageData(0, 0, 1, ih).data;
@@ -167,50 +192,47 @@
                 py = (ey + sy) >> 1;
             }
             var ratio = py / ih;
-            if(ratio === 0){
-                ratio = 1;
-            }
-            
-            return ratio;
+            return ratio === 0 ? 1 : ratio;
         },
         callback: function(d) {
             return d;
         },
         extend: function() {
             var target = arguments[0] || {}, a = 1, al = arguments.length, deep = false;
-            if ( target.constructor == Boolean ) {
+            if (target.constructor === Boolean) {
                 deep = target;
                 target = arguments[1] || {};
             }
-            if ( al == 1 ) {
+            if (al === 1) {
                 target = this;
                 a = 0;
             }
             var prop;
-            for ( ; a < al; a++ )
-                if ( (prop = arguments[a]) != null )
-                    for ( var i in prop ) {
-                        if ( target == prop[i] )
+            for (; a < al; a++)
+                if ((prop = arguments[a]) !== null)
+                    for (var i in prop) {
+                        if (target === prop[i])
                             continue;
-                        if ( deep && typeof prop[i] == 'object' && target[i] )
-                            methods.extend( target[i], prop[i] );
-                        else if ( prop[i] != undefined )
+                        if (deep && typeof prop[i] === 'object' && target[i])
+                            methods.extend(target[i], prop[i]);
+                        else if (prop[i] !== undefined)
                             target[i] = prop[i];
                     }
             return target;
         }
     },
-            defaults = {
-              width    : 300,
-              height   : 0,
-              crop     : false,
-              quality  : 80,
-              'callback' : methods.callback
+    defaults = {
+    width    : 300,
+            height   : 0,
+            crop     : false,
+            quality  : 80,
+            rotate   : 0,
+            'callback' : methods.callback
     };
     function Plugin(file, options) {
         this.file = file;
         // EXTEND
-        this.options = methods.extend( {}, defaults, options) ;
+        this.options = methods.extend({}, defaults, options);
         this._defaults = defaults;
         this._name = pluginName;
         this.init();
@@ -232,7 +254,8 @@
                 var img = new Image();
                 img.onload = function(e) {
 
-                    var orientation = exif['Orientation'];
+                    var orientation = exif['Orientation'] || 1;
+                    orientation = methods.rotate(orientation, $this.options.rotate);
 
                     // CW or CCW ? replace width and height
                     var size = (orientation >= 5 && orientation <= 8)
@@ -283,7 +306,7 @@
                     newcanvas.height = height;
                     newctx = newcanvas.getContext('2d');
                     newctx.drawImage(canvas, 0, 0, width, height);
-
+                    // TO DO: image/png detecting issue
                     var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
 
                     // CALLBACK
@@ -294,18 +317,17 @@
                 img.src = dataURL;
                 // =====================================================
 
-
-            }
+            };
             reader.readAsDataURL(file);
             //reader.readAsBinaryString(file);
 
         }
     };
     $[pluginName] = function(file, options) {
-        if (typeof file == 'string')
+        if (typeof file === 'string')
             return methods[file](options);
         else
             new Plugin(file, options);
-    }
+    };
 
 })(window);

@@ -50,8 +50,8 @@ Options
 
 License
 -------
-It is under [MIT License](https://github.com/gokercebeci/canvasResize/blob/master/LICENSE.md "MIT License").
-and It requires "**binaryajax.js**" and "**exif.js**" (or **jQuery EXIF**)
+It is under [MIT License](https://github.com/gokercebeci/canvasResize/blob/master/LICENCE.md "MIT License") 
+and It requires **binaryajax.js** and **exif.js** (or **jQuery EXIF**)
 to work which is also under the [MPL License](http://www.nihilogic.dk/licenses/mpl-license.txt)
 
 Developer

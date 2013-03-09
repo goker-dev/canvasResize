@@ -19,7 +19,7 @@ You can change image size and quality with plugin [**options**](#options) easily
  *  IOS 6.1.2
  *  Android 2.3+
 
-You can check it on [gokercebeci.com/dev/carousel](http://gokercebeci.com/dev/carousel).
+You can check it on [gokercebeci.com/dev/canvasresize](http://gokercebeci.com/dev/canvasresize).
 
 Usage
 -----
@@ -50,7 +50,7 @@ Options
 
 License
 -------
-It is under [MIT License](https://github.com/gokercebeci/canvasresize/blob/master/LICENSE.md "MIT License").
+It is under [MIT License](https://github.com/gokercebeci/canvasResize/blob/master/LICENSE.md "MIT License").
 and It requires "**binaryajax.js**" and "**exif.js**" (or **jQuery EXIF**)
 to work which is also under the [MPL License](http://www.nihilogic.dk/licenses/mpl-license.txt)
 

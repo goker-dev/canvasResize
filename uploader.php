@@ -29,7 +29,7 @@ if ($_FILES['photo']['size'] > ($maxsize * 1048576)) {
 // If the file is an image
 if (preg_match('/image/i', $_FILES['photo']['type'])) {
 
-    $filename = uniqid() . '.jpg';
+    $filename = 'uploads/' . uniqid() . '.jpg';
 } else {
 
     $r->error = "Error: Only image files";
@@ -56,7 +56,7 @@ $path = str_replace('uploader.php', '', $_SERVER['SCRIPT_NAME']);
 // Result data
 $r->filename = $filename;
 $r->path = $path;
-$r->img = '<img src="' . $path . $filename . '" alt="image" />';
+$r->img = '<img src="' . $r->path . $r->filename . '" alt="image" />';
 
 // Return to JSON
 echo json_encode($r);

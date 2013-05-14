@@ -1,7 +1,7 @@
 canvasResize
 =============
 
-**canvasResize** is a plug-in for client side image resizing. It's compatible with **iOS6** and **Android 2.3+**. 
+**canvasResize** is a plug-in for client side image resizing. It's compatible with **iOS6**. 
 
 It can work both with **jQuery** and **Zepto**
 
@@ -17,7 +17,6 @@ You can change image size and quality with plugin [**options**](#options) easily
  *  Google Chrome (25.0.1364.68 beta)
  *  Opera (12.14)
  *  IOS 6.1.2
- *  Android 2.3+
 
 You can check it on [gokercebeci.com/dev/canvasresize](http://gokercebeci.com/dev/canvasresize).
 

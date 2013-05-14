@@ -41,10 +41,10 @@
                 <h2>SAMPLE</h2>
                 <!-- description -->
                 <div class="desc">
-                    <h1>jQuery canvasResize v1.1.1</h1>
+                    <h1>jQuery canvasResize v1.2.0</h1>
                     <hr>
                     <p><b>canvasResize</b> is a plugin for client side image resizing.</p>
-                    <p>It's compatible with iOS6 and Android 2.3+ It can work 
+                    <p>It's compatible with iOS6 It can work 
                         both with jQuery and Zepto</p>
                     <p>I fixed iOS6 Safari's image file rendering issue for large size image (over mega-pixel)
                         using few functions from 
@@ -57,8 +57,7 @@
                         <li><b>Chromium (24.0.1312.56)</b>, </li>
                         <li><b>Google Chrome (25.0.1364.68 beta)</b>, </li>
                         <li><b>Opera (12.14)</b>, </li>
-                        <li><b>IOS 6.1.2</b>, </li>
-                        <li><b>Android 2.3+</b> </li>
+                        <li><b>IOS 6.1.2</b></li>
                     </ul>
                     <p>and it works enough for me for now!</p>
                     <p>It is under MIT License and It requires "binaryajax.js" and "exif.js" to work which is also under the MPL License [http://www.nihilogic.dk/licenses/mpl-license.txt]</p>
@@ -106,10 +105,10 @@
                                 // CANVAS RESIZING
                                 canvasResize(file, {
                                     width: 300,
-                                    height: 0,
+                                    height: 300,
                                     crop: false,
                                     quality: 80,
-                                    rotate: 100,
+                                    rotate: 0,
                                     callback: function(data, width, height) {
 
                                         // SHOW AS AN IMAGE

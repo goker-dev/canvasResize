@@ -2,9 +2,9 @@
  * 
  * canvasResize
  * 
- * Version: 1.1.1 
+ * Version: 1.2.0 
  * Date (d/m/y): 02/10/12
- * Update (d/m/y): 09/03/13
+ * Update (d/m/y): 14/05/13
  * Original author: @gokercebeci 
  * Licensed under the MIT license
  * - This plugin working with binaryajax.js and exif.js 
@@ -22,6 +22,7 @@
     var pluginName = 'canvasResize',
             methods = {
         newsize: function(w, h, W, H, C) {
+            var c = C ? 'h' : '';
             if ((W && w > W) || (H && h > H)) {
                 var r = w / h;
                 if ((r >= 1 || H === 0) && W && !C) {
@@ -30,6 +31,7 @@
                 } else if (C && r <= (W / H)) {
                     w = W;
                     h = (W / r) >> 0;
+                    c = 'w';
                 } else {
                     w = (H * r) >> 0;
                     h = H;
@@ -37,7 +39,8 @@
             }
             return {
                 'width': w,
-                'height': h
+                'height': h,
+                'cropped': c
             };
         },
         dataURLtoBlob: function(data) {
@@ -222,12 +225,12 @@
         }
     },
     defaults = {
-    width    : 300,
-            height   : 0,
-            crop     : false,
-            quality  : 80,
-            rotate   : 0,
-            'callback' : methods.callback
+        width: 300,
+        height: 0,
+        crop: false,
+        quality: 80,
+        rotate: 0,
+        'callback': methods.callback
     };
     function Plugin(file, options) {
         this.file = file;
@@ -302,15 +305,22 @@
 
                     // if rotated width and height data replacing issue 
                     var newcanvas = document.createElement('canvas');
-                    newcanvas.width = width;
-                    newcanvas.height = height;
+                    newcanvas.width = size.cropped === 'h' ? height : width;
+                    newcanvas.height = size.cropped === 'w' ? width : height;
+                    var x = size.cropped === 'h' ? (height - width) * .5 : 0;
+                    var y = size.cropped === 'w' ? (width - height) * .5 : 0;
                     newctx = newcanvas.getContext('2d');
-                    newctx.drawImage(canvas, 0, 0, width, height);
-                    // TO DO: image/png detecting issue
-                    var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
+                    newctx.drawImage(canvas, x, y, width, height);
+
+                    console.log(file, file.type);
+                    if (file.type === "image/png") {
+                        var data = newcanvas.toDataURL(file.type);
+                    } else {
+                        var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
+                    }
 
                     // CALLBACK
-                    $this.options.callback(data, width, height);
+                    $this.options.callback(data, newcanvas.width, newcanvas.height);
 
                     // });
                 };

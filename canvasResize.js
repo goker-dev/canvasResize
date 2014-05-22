@@ -309,7 +309,7 @@
                     newcanvas.height = size.cropped === 'w' ? width : height;
                     var x = size.cropped === 'h' ? (height - width) * .5 : 0;
                     var y = size.cropped === 'w' ? (width - height) * .5 : 0;
-                    newctx = newcanvas.getContext('2d');
+                    var newctx = newcanvas.getContext('2d');
                     newctx.drawImage(canvas, x, y, width, height);
 
                     console.log(file, file.type);

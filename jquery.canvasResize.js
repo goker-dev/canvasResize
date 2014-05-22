@@ -208,8 +208,8 @@
         quality: 80,
         'callback': methods.callback
     };
-    function Plugin(file, options) {
-        this.file = file;
+    function Plugin(url, options) {
+        this.url = url;
         this.options = $.extend({}, defaults, options);
         this._defaults = defaults;
         this._name = pluginName;
@@ -219,95 +219,74 @@
         init: function() {
             //this.options.init(this);
             var $this = this;
-            var file = this.file;
+            var url = this.url;
 
-            var reader = new FileReader();
-            reader.onloadend = function(e) {
-                var dataURL = e.target.result;
-                var img = new Image();
-                img.onload = function(e) {
-                    // Read Orientation Data in EXIF
-                    $(img).exifLoadFromDataURL(function() {
-                        var orientation = $(img).exif('Orientation')[0] || 1;
-                        orientation = methods.rotate(orientation, $this.options.rotate);
+            var img = new Image();
+            img.onload = function(e) {
+                // Read Orientation Data in EXIF
+                    var orientation = 1;
 
-                        // CW or CCW ? replace width and height
-                        var size = (orientation >= 5 && orientation <= 8)
-                                ? methods.newsize(img.height, img.width, $this.options.width, $this.options.height, $this.options.crop)
-                                : methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
+                    var size = methods.newsize(img.width, img.height, $this.options.width, $this.options.height, $this.options.crop);
 
-                        var iw = img.width, ih = img.height;
-                        var width = size.width, height = size.height;
+                    var iw = img.width, ih = img.height;
+                    var width = size.width, height = size.height;
 
-                        //console.log(iw, ih, size.width, size.height, orientation);
+                    //console.log(iw, ih, size.width, size.height, orientation);
 
-                        var canvas = document.createElement("canvas");
-                        var ctx = canvas.getContext("2d");
-                        ctx.save();
-                        methods.transformCoordinate(canvas, width, height, orientation);
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    ctx.save();
+                    methods.transformCoordinate(canvas, width, height, orientation);
 
-                        // over image size
-                        if (methods.detectSubsampling(img)) {
-                            iw /= 2;
-                            ih /= 2;
+                    // over image size
+                    if (methods.detectSubsampling(img)) {
+                        iw /= 2;
+                        ih /= 2;
+                    }
+                    var d = 1024; // size of tiling canvas
+                    var tmpCanvas = document.createElement('canvas');
+                    tmpCanvas.width = tmpCanvas.height = d;
+                    var tmpCtx = tmpCanvas.getContext('2d');
+                    var vertSquashRatio = methods.detectVerticalSquash(img, iw, ih);
+                    var sy = 0;
+                    while (sy < ih) {
+                        var sh = sy + d > ih ? ih - sy : d;
+                        var sx = 0;
+                        while (sx < iw) {
+                            var sw = sx + d > iw ? iw - sx : d;
+                            tmpCtx.clearRect(0, 0, d, d);
+                            tmpCtx.drawImage(img, -sx, -sy);
+                            var dx = Math.floor(sx * width / iw);
+                            var dw = Math.ceil(sw * width / iw);
+                            var dy = Math.floor(sy * height / ih / vertSquashRatio);
+                            var dh = Math.ceil(sh * height / ih / vertSquashRatio);
+                            ctx.drawImage(tmpCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
+                            sx += d;
                         }
-                        var d = 1024; // size of tiling canvas
-                        var tmpCanvas = document.createElement('canvas');
-                        tmpCanvas.width = tmpCanvas.height = d;
-                        var tmpCtx = tmpCanvas.getContext('2d');
-                        var vertSquashRatio = methods.detectVerticalSquash(img, iw, ih);
-                        var sy = 0;
-                        while (sy < ih) {
-                            var sh = sy + d > ih ? ih - sy : d;
-                            var sx = 0;
-                            while (sx < iw) {
-                                var sw = sx + d > iw ? iw - sx : d;
-                                tmpCtx.clearRect(0, 0, d, d);
-                                tmpCtx.drawImage(img, -sx, -sy);
-                                var dx = Math.floor(sx * width / iw);
-                                var dw = Math.ceil(sw * width / iw);
-                                var dy = Math.floor(sy * height / ih / vertSquashRatio);
-                                var dh = Math.ceil(sh * height / ih / vertSquashRatio);
-                                ctx.drawImage(tmpCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
-                                sx += d;
-                            }
-                            sy += d;
-                        }
-                        ctx.restore();
-                        tmpCanvas = tmpCtx = null;
+                        sy += d;
+                    }
+                    ctx.restore();
+                    tmpCanvas = tmpCtx = null;
 
-                        // if cropped or rotated width and height data replacing issue 
-                        var newcanvas = document.createElement('canvas');
-                        newcanvas.width = size.cropped === 'h' ? height : width;
-                        newcanvas.height = size.cropped === 'w' ? width : height;
-                        var x = size.cropped === 'h' ? (height - width) * .5 : 0;
-                        var y = size.cropped === 'w' ? (width - height) * .5 : 0;
-                        newctx = newcanvas.getContext('2d');
-                        newctx.drawImage(canvas, x, y, width, height);
+                    // if cropped or rotated width and height data replacing issue
+                    var newcanvas = document.createElement('canvas');
+                    newcanvas.width = size.cropped === 'h' ? height : width;
+                    newcanvas.height = size.cropped === 'w' ? width : height;
+                    var x = size.cropped === 'h' ? (height - width) * .5 : 0;
+                    var y = size.cropped === 'w' ? (width - height) * .5 : 0;
+                    var newctx = newcanvas.getContext('2d');
+                    newctx.drawImage(canvas, x, y, width, height);
 
-                        if (file.type === "image/png") {
-                            var data = newcanvas.toDataURL(file.type);
-                        } else {
-                            var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
-                        }
+                    var data = newcanvas.toDataURL("image/jpeg", ($this.options.quality * .01));
 
-                        // CALLBACK
-                        $this.options.callback(data, width, height);
-
-                    });
-                };
-                img.src = dataURL;
-                // =====================================================
+                    // CALLBACK
+                    $this.options.callback(data, width, height, iw, ih);
             };
-            reader.readAsDataURL(file);
-
+            img.src = url;
         }
     };
-    $[pluginName] = function(file, options) {
-        if (typeof file === 'string')
-            return methods[file](options);
-        else
-            new Plugin(file, options);
+    $[pluginName] = function(url, options) {
+        new Plugin(url, options);
     };
 
 })(jQuery);

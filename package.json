@@ -1,0 +1,31 @@
+{
+  "name": "canvasResize",
+  "version": "1.2.1",
+  "description": "resizing images on web client",
+  "main": "/dist/canvasResize.min.js",
+  "directories": {
+    "src": "src",
+    "dist": "dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-uglify": "^0.7.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-jslint": "^1.1.12",
+    "grunt-newer": "^1.1.0",
+    "load-grunt-config": "*",
+    "load-grunt-tasks": "^3.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "binary",
+    "data",
+    "ajax"
+  ],
+  "author": [ "@gokercebeci", 
+  			"Robert Munn <robert.d.munn@gmail.com>"],
+  "license": "MIT License"
+}

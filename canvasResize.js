@@ -180,7 +180,7 @@
             canvas.height = ih;
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
-            var data = ctx.getImageData(0, 0, 1, ih).data;
+            var data = ctx.getImageData(0, 0, iw, ih).data;
             // search image edge pixel position in case it is squashed vertically.
             var sy = 0;
             var ey = ih;
@@ -195,6 +195,9 @@
                 py = (ey + sy) >> 1;
             }
             var ratio = py / ih;
+            if (ratio.toFixed(1).split('.')[ratio.toFixed(1).split('.').length - 1] === '0') {
+                ratio = 0;
+            }
             return ratio === 0 ? 1 : ratio;
         },
         callback: function(d) {
